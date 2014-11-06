@@ -1,0 +1,19 @@
+{
+  "name": "copperhead",
+  "version": "1.0.0",
+  "description": "",
+  "main": "copperhead.js",
+  "scripts": {
+    "test": "node assert_cmd.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/deluxicon/copperhead.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/deluxicon/copperhead/issues"
+  },
+  "homepage": "https://github.com/deluxicon/copperhead"
+}
