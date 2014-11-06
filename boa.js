@@ -31,7 +31,7 @@
         return range
     }
   
-    var Boa = {
+    var Copper = {
         abs: Math.abs,
         all: function(arr){
             for(var i=0,l=arr.length; i < l ; i++) {
@@ -312,11 +312,11 @@
     }
   
     if(typeof module !== 'undefined' && module.exports) {
-        module.exports = Boa
-    } else if(typeof window !== 'undefined'){
-        window.Boa = Boa
+        module.exports = Copper
+    // } else if(typeof window !== 'undefined'){
+    //     window.Copper = Copper
     } else {
-        this.Boa = Boa
+        this.Copper = Copper
     }
 
 })()

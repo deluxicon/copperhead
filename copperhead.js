@@ -1,101 +1,371 @@
 #!/usr/bin/env node 
 
-
-String.prototype.startswith = function(text) {
-    return this.substr(0,text.length) == text
-}
-
-String.prototype.join = function(arr) {
-    var full_string = ""
-
-    arr.forEach(function(a){
-        full_string += a + this
-    })
-
-    // bug: inserts global into text
-    return full_string.trimRight()
-}
-
-
-String.prototype.count = function(substring){
-		var count = 0
-		var sub_len = substring.length
-		for (var i = 0; i < this.length; i++) {
-			count += ( this.substr(i,sub_len) == substring)? 1: 0
-		}
-		return count
-	}
-
-
-Array.prototype.append = Array.prototype.push
-
-Array.prototype.choice = function () {
-	var length = this.length-1
-	var round = Math.round
-	var random = Math.random
-	var r = round(random()*length) 
-	return this[r]	
-}
-
-var exports = module.exports = {
-    cwd: process.cwd,
+var Copper = {
+    
+    cwd: function () {
+        if (typeof process != 'undefined') { return process.cwd() }
+        return null
+    },
+    
     chdir: function (path) {
-        process.chdir(path)
-        console.log(process.cwd())
+        if (typeof process != 'undefined') { 
+            process.chdir(path)
+            console.log(process.cwd())
+            return
+        }
         return
     },
 
-    print: console.log,
+    print: function (content) {
+        console.log(content)
+        return
+    },
+    
     exit: function () { 
-    	console.log('exiting node...')
-    	return process.exit() 
+        if (typeof process != 'undefined') { 
+        	console.log('exiting node...')
+        	return process.exit() 
+        }
     },
 
-    range: range,
     random: Math.random,
     isInt: function (n){
         return typeof n== "number" && isFinite(n) && n%1===0;
+    },
+
+
+
+
+
+
+
+    abs: Math.abs,
+    all: function(arr){
+        for(var i=0,l=arr.length; i < l ; i++) {
+            if(!arr[i]) return false
+        }
+        return true
+    },
+
+    any: function(arr) {
+        for(var i=0,l=arr.length; i < l ; i++) {
+            if(arr[i]) return true
+        }
+        return false
+    },
+    basestring: null,
+    bin: function(n) {
+        return n.toString(2)
+    },
+    bool: function(o) {
+        return !!o
+    },
+    bytearray: null,
+    callable: function(o) {
+        return typeof o === 'function'
+    },
+    chr: function(c) {
+        return String.fromCharCode(c)
+    },
+    cmp: function(a, b) {
+        return a-b
+    },
+    compile: null,
+    complex: null,
+    delattr: function(o, name) {
+        delete o[name]
+    },
+    dict: function(arr){
+        var o = {}
+        for(var i=0, l=arr.length;i<l;i++) {
+            if(arr[i].length !== 2) throw new Error('Expected a list of 2 element arrays')
+            o[arr[i][0]] = arr[i][1]
+        }
+        return o
+    },
+    dir: null,
+    divmod: function(a, b) {
+        return [a/b, a%b]
+    },
+    enumerate: function(arr) {
+        // TODO: ES6 generator?
+        var a = []
+        for(var i=0, l=arr.length;i<l;i++) {
+            a.push([i, arr[i]])
+        }
+        return a
+    },
+    eval: eval,
+    execfile: null,
+    file: function(f, options) {
+        if(typeof fs !== 'undefined' && fs.readFileSync) {
+            return fs.readFileSync(f, options)
+        }
+        return null
+    },
+    filter: function(fn, arr) {
+        var a = []
+        for(var i=0, l=arr.length;i<l;i++) {
+            if (fn(arr[i])){
+                a.push(arr[i])
+            }
+        }
+        return a
+    },
+    float: function(n) {
+        return parseFloat(n)
+    },
+    format: null,
+    frozenset: null,
+    getattr: function(o, name, def) {
+        if (!def && !o[name]) throw new Error('Object does not have that key')
+        return o[name] || def
+    },
+    globals: function() {
+        if(typeof window !== 'undefined') return window
+        if(typeof GLOBAL !== 'undefined') return GLOBAL
+        return {}
+    },
+    hasattr: function(o, name) {
+        return !!o[name]
+    },
+    hash: function(o) {
+        return o.toString()
+    },
+    help: null,
+    hex: function(n) {
+        return n.toString(16)
+    },
+    int: function(n, base) {
+        base = base || 10
+        return parseInt(n, base)
+    },
+    isinstance: function(o, c) {
+        return o instanceof c
+    },
+    issubclass: null,
+    iter: function(o) {
+        // TODO: ES6 generator?
+        return Array.apply([], o)
+    },
+
+    keys: function (arr) {
+        if (typeof keys == 'undefined') {
+            var k = []
+            for (a in arr) k.push(a)
+            return k
+        }
+    },
+    len: function(s) {
+        return s.length
+    },
+    list: function(o) {
+        return Array.apply([], o)
+    },
+    locals: null,
+    long: function(n, base){
+        base = base || 10
+        return parseInt(n, base)
+    },
+    map: function() {
+        var args = Array.apply([], arguments)
+        var fn = args.shift()
+        if(!(typeof fn === 'function')) {
+            args.unshift(fn)
+            fn = function() {
+                if (arguments.length == 1) return arguments[0]
+                return Array.apply([], arguments)
+            }
+        }
+        var l = reduce(function(arr, maxx){
+            return Math.max(arr.length, maxx)
+        }, args, 0)
+        var res = []
+        for(var i=0; i<l; i++) {
+            if(args.length === 1) {
+                res.push(fn(args[0][i]))
+            } else {
+                var t = []
+                for(var j=0, jl=args.length;j<jl;j++){
+                   t.push(fn(args[j][i]))
+                }
+                res.push(t)
+            }
+        }
+
+        return res
+    },
+    max: function max() {
+        var args = Array.apply([], arguments)
+        if (args.length === 1 && typeof args[0].length !== 'undefined'){
+            return max.apply(null, args)
+        }
+        var m = Math.max(args.pop(), args.pop())
+        if(args.length > 0) return max(args.concat(m))
+        return m
+    },
+    memoryview: null,
+    min: function min() {
+        var args = Array.apply([], arguments)
+        if (args.length === 1 && typeof args[0].length !== 'undefined'){
+            return max.apply(null, args)
+        }
+        var m = Math.min(args.pop(), args.pop())
+        if(args.length > 0) return max(args.concat(m))
+        return m
+    },
+    next: null,
+    object: function() {
+        return {}
+    },
+    oct: function(n) {
+        return n.toString(8)
+    },
+    open: function(name, options) {
+        if(typeof fs !== 'undefined' && fs.readFileSync) {
+            return fs.readFileSync(f, options)
+        }
+        return null
+    },
+    ord: function(s) {
+        return s.charCodeAt(0)
+    },
+    pow: function(a, b, c) {
+        // TODO: if modding, this can be heavily optimized
+        c = c || 1
+        return Math.pow(a, b) % c
+    },
+    print: function(){
+        console.log.apply(null, Array.apply([], arguments))
+    },
+    property: null,
+    raw_input: null,
+    reload: null,
+    repr: function(o) {
+        return JSON.stringify(o)
+    },
+    reversed: function(arr) {
+        var a = []
+        for(var i=arr.length-1; i>=0;i--){
+            a.push(arr[i])
+        }
+        return a
+    },
+    round: function(n, digits) {
+        var multiplier = Math.pow(10, digits)
+        return (Math.round(n*multiplier)/multiplier).toFixed(digits)
+    },
+    set: function(arr) {
+        var o = {}
+        for(var i=0, l=arr.length;i<l;i++) {
+            o[arr[i]] = true
+        }
+        return Object.keys(o)
+    },
+    setattr: function(o, name, val) {
+        o[name] = val
+    },
+    slice: null,
+    sorted: function(arr, cmp, key, reverse) {
+        reverse = reverse || false
+        key = key || function(n){ return n}
+        cmp = cmp || function(a, b) {
+            return a-b
+        }
+        var a = []
+        for(var i=0,l=arr.length;i<l;i++) {
+            a.push(arr[i])
+        }
+        return a.sort(function(a, b){
+            return cmp(key(a), key(b))
+        })
+    },
+    staticmethod: null,
+    str: function(s) {
+        return s.toString()
+    },
+    sum: function(arr, start) {
+        start = start || 0
+        var sum = 0
+        for(var i=0, l=arr.length;i<l;i++) {
+            sum+=arr[i]
+        }
+        return sum
+    },
+    super: null,
+    tuple: function(arr) {
+        return arr
+    },
+    type: function(o) {
+        return typeof o
+    },
+    unicode: function(s) {
+        return s.toString()
+    },
+
+
+    values: function (arr) {
+        if (typeof values == 'undefined') {
+            var v = []
+            for (a in arr) v.push(arr[a])
+            return v
+        }
+    },
+
+    vars:null,
+    // TODO: ES6 generators?
+    xrange: null, // => range
+    zip: function () {
+        //if 2d list passed in, bubble it down
+        if (arguments.length === 1 && arguments[0] instanceof Array && arguments[0][0] instanceof Array) {
+            return zip.apply(this, arguments[0])
+        }
+
+        var args = [].slice.call(arguments);
+        var shortest = args.length == 0 ? [] : args.reduce(function (a, b) {
+            return a.length < b.length ? a : b
+        });
+
+        return shortest.map(function (_, i) {
+            return args.map(function (array) {
+                return array[i]
+            })
+        });
+    }
+}
+
+
+Copper.range = function(start,end,step) {
+    var range = []
+
+    if (arguments.length == 0) throw TypeError("Must pass at least a one argument.")
+    if (arguments.length == 1) {
+        for (var i = start-1; i >= 0; i--) {
+            range.push(i)
+        }
+        range = range.reverse()
     }
 
+    if (arguments.length == 2) {
+        for (var i = end-1; i >= start; i--) {
+            range.push(i)
+        }
+        range = range.reverse()
+    }
 
-
-
-
-}
-
-
-
-var range = function(start,end,step) {
-	var range = []
-
-	if (arguments.length == 0) throw TypeError("Must pass at least a one argument.")
-	if (arguments.length == 1) {
-		for (var i = start-1; i >= 0; i--) {
-			range.push(i)
-		}
-		range = range.reverse()
-	}
-
-	if (arguments.length == 2) {
-		for (var i = end-1; i >= start; i--) {
-			range.push(i)
-		}
-		range = range.reverse()
-	}
-
-	if (arguments.length == 3) {
-		var s = 1
-		
-		for (var i = start; i < end; i++) {
-			if (s == 1) {
-				s = step
-				range.push(i)
-			} else {
-				s--
-			}
-		}
-	}
-	return range
+    if (arguments.length == 3) {
+        var s = 1
+        
+        for (var i = start; i < end; i++) {
+            if (s == 1) {
+                s = step
+                range.push(i)
+            } else {
+                s--
+            }
+        }
+    }
+    return range
 }
 
 
@@ -104,145 +374,57 @@ var range = function(start,end,step) {
 
 
 
-// function python(file_path) {
-//     var spawn = require('child_process').spawn,
-//         py = spawn('python', [file_path]),
-//         store = ''
-//     py.stdout.on('data', function (data) { store += data })
-//     py.stderr.on('data', function (data) { console.log('stderr: ' + data) })
-//     py.on('close', function (code) { 
-//         // buck = store 
-//         console.log(store)
-//         python = store
-//     })
+
+
+
+
+
+
+
+
+
+
+
+// Copper.reduce = function (fn, arr, s) {
+//     var i=0
+//     if(typeof s === 'undefined'){
+//         s=arr[0]
+//         i++
+//     }
+//     for(var l = arr.length; i<l;i++) {
+//         s = fn(arr[i], s)
+//     }
+//     return s
+// }
+
+// function range(start, stop, step) {
+//     if (arguments.length <= 1) {
+//         stop = start || 0
+//         start = 0
+//     }
+//     step = arguments[2] || 1
+
+//     var len = Math.max(Math.ceil((stop - start) / step), 0)
+//     var idx = 0
+//     var range = new Array(len)
+
+//     while (idx < len) {
+//         range[idx++] = start
+//         start += step
+//     }
+
+//     return range
 // }
 
 
 
-
-if (typeof keys == 'undefined') {
-    exports.keys = function (arr) {
-        var k = []
-        for (a in arr) k.push(a)
-        return k
-    }
-}
-
-
-if (typeof values == 'undefined') {
-    exports.values = function (arr) {
-        var v = []
-        for (a in arr) v.push(arr[a])
-        return v
-    }
-}
-
-
-
-
-function isArray(obj) {
-    return Array.isArray(obj)
-}
-
-Array.prototype.unique = function () {
-    var o = {}
-
-    for (var i = this.length - 1; i >= 0; i--) {
-        if (o[this[i]]) {
-            o[this[i]].count += 1            
-        } else {
-            o[this[i]] = {
-                count: 1,
-                type: typeof(this[i])
-            }
-
-        }
-    }
-
-    function setkeys(arr) {
-        var k = []
-        for (a in arr) {
-            if (arr[a].type == 'number') {
-                if (a.match(/\./gmi)) {
-                    k.push(parseFloat(a))
-                } else {
-                    k.push(parseInt(a))    
-                }  
-            } else {
-                k.push(a)    
-            } 
-        }
-        return k
-    }
-    return setkeys(o)
-}
-
-
-String.prototype.loop = function () {
-    for (i in this) {
-        console.log(this[i])
-    }
-}
-
-String.prototype.trigram = function(str) {
-    
-    Array.prototype.frequency = function () {
-        var o = {}
-
-        for (var i = this.length - 1; i >= 0; i--) {
-            if (o[this[i]]) {
-                o[this[i]] += 1            
-            } else {
-                o[this[i]] = 1            
-            }
-        }
-        return o
-    }
-
-
-    function set(str) {  
-        var s = str.split(' ')
-        var o = {}
-
-        for (var i = 0, g = s.length; i<g; i++) {
-            // if (s[i+1] != undefined) {
-            if (s[i+1]) {
-                var k = s[i] + ' ' + s[i+1]
-                if (o[k]) { 
-                    o[k].push(s[i+2])
-                } else {
-                    o[k] = [s[i+2]]
-                }
-            }
-        }
-        return o
-    }
-
-
-    function predict(str) {
-        var s = set(str)
-    }
-    return set(this)
-}
-
-
-
-
-
-
-
+// Initialize All Methods
+// Into Global Scope
 (function init() {
+    for (e in Copper) {
+        // this[e] = Copper[e]
+        window[e] = Copper[e]
 
-    String.prototype.loop = function () {
-        for (i in this) {
-            console.log(this[i])
-        }
     }
-
-    // require('./nodecuts.js')
-    // unpacks everything
-    for (e in exports) {
-    	global[e] = exports[e]
-    }
-
 })()
+
